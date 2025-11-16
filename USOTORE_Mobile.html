@@ -13,14 +13,17 @@
     --text:#f3f4f6;
     --win:#22c55e;
     --lose:#ef4444;
-    --line:#3b82f6;
 }
 
+/* Reset */
 *{box-sizing:border-box;margin:0;padding:0}
-body{background:var(--bg);color:var(--text);font-family:"Rajdhani","Noto Sans JP",sans-serif;}
+body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:"Rajdhani","Noto Sans JP",sans-serif;
+}
 
-#title{text-align:center;font-size:22px;letter-spacing:6px;font-weight:700;padding:12px}
-
+/* Layout */
 #wrap{
     display:flex;
     flex-direction:column;
@@ -28,6 +31,15 @@ body{background:var(--bg);color:var(--text);font-family:"Rajdhani","Noto Sans JP
     width:100%;
 }
 
+#title{
+    text-align:center;
+    font-size:28px;
+    padding:12px;
+    font-weight:700;
+    letter-spacing:6px;
+}
+
+/* Chart area */
 #chart{
     flex:1;
     width:100%;
@@ -36,12 +48,12 @@ body{background:var(--bg);color:var(--text);font-family:"Rajdhani","Noto Sans JP
     position:relative;
 }
 
-/* UI PANEL */
+/* Panel */
 .panel{
     width:100%;
     background:#111;
     border-top:1px solid #333;
-    padding:10px;
+    padding:12px;
 }
 
 .row{
@@ -49,13 +61,11 @@ body{background:var(--bg);color:var(--text);font-family:"Rajdhani","Noto Sans JP
     flex-direction:column;
     margin-bottom:10px;
 }
-
 .row label{
     font-size:12px;
     opacity:0.7;
     margin-bottom:4px;
 }
-
 input,select{
     padding:10px;
     width:100%;
@@ -65,53 +75,52 @@ input,select{
     border-radius:4px;
 }
 
+/* Buttons */
 button{
     width:100%;
     padding:14px;
     border:none;
-    border-radius:4px;
+    border-radius:6px;
     color:#fff;
     font-size:18px;
     font-weight:700;
     margin-bottom:10px;
 }
-
 #highBtn{background:#16a34a;}
 #lowBtn{background:#dc2626;}
 
 #balance{
-    text-align:left;
-    padding:4px 6px;
     font-size:14px;
     opacity:0.85;
+    padding:4px;
 }
-
 #log{
     font-size:12px;
-    opacity:0.7;
+    opacity:0.8;
     padding:6px;
 }
 
-/* entry lines */
-.entry-line-high{
+/* Entry line */
+.entry-line{
     position:absolute;
-    border-top:2px solid #00ff00;
-    z-index:9999;
     width:100%;
-}
-
-.entry-line-low{
-    position:absolute;
-    border-top:2px solid #ff0044;
+    height:2px;
+    left:0;
     z-index:9999;
-    width:100%;
 }
-
+.entry-high{
+    background:#22c55e;
+}
+.entry-low{
+    background:#ef4444;
+}
 </style>
 </head>
 
 <body>
 <div id="wrap">
+
+    <div id="title">USOTORE</div>
 
     <div id="chart"></div>
 
@@ -143,45 +152,46 @@ button{
 
 </div>
 
-<script>
-let entryLines = [];
 
-/* クリック時にライン表示 */
+<script>
+let balance = 1000000;
+const entryLines = [];
+
 function addEntryLine(y, direction){
     const line = document.createElement("div");
+    line.classList.add("entry-line");
     line.style.top = `${y}px`;
 
     if(direction === "HIGH"){
-        line.classList.add("entry-line-high");
+        line.classList.add("entry-high");
     }else{
-        line.classList.add("entry-line-low");
+        line.classList.add("entry-low");
     }
 
     document.querySelector("#chart").appendChild(line);
     entryLines.push(line);
 }
 
-/* ログ表示用 */
 function log(text){
     const logbox = document.getElementById("log");
     logbox.innerHTML = text + "<br>" + logbox.innerHTML;
 }
 
-/* event listeners */
+/* Button events */
 document.getElementById("highBtn").addEventListener("click",()=>{
     const chart = document.getElementById("chart");
-    const y = chart.clientHeight / 2;
+    const y = chart.clientHeight/2;
     addEntryLine(y,"HIGH");
     log("HIGHエントリー");
 });
 
 document.getElementById("lowBtn").addEventListener("click",()=>{
     const chart = document.getElementById("chart");
-    const y = chart.clientHeight / 2;
+    const y = chart.clientHeight/2;
     addEntryLine(y,"LOW");
     log("LOWエントリー");
 });
-
 </script>
+
 </body>
 </html>
