@@ -2,227 +2,175 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>USOTORE Mobile</title>
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>USOTORE Mobile Candle</title>
 <style>
-  :root{
-    --bg:#0a0a0a;--panel:#111;--text:#f3f4f6;--win:#22c55e;--lose:#ef4444;--gold:#fbbf24;--cyan:#38bdf8;
-  }
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--bg);color:var(--text);font-family:"Rajdhani","Noto Sans JP",system-ui,sans-serif;overflow:hidden;}
-  #title{text-align:center;font-size:22px;letter-spacing:6px;font-weight:700;color:rgba(251,191,36,0.9);padding:10px 0;text-shadow:0 0 12px rgba(251,191,36,0.35);}  
-  #wrap{display:flex;flex-direction:column;height:100vh;width:100vw;}
-  #chart{flex:1;width:100%;background:#0b0b10;display:block;}
-  .panel{width:100%;background:#111;border-top:1px solid #333;padding:12px;overflow-y:auto;}  
-  .row{display:flex;flex-direction:column;margin-bottom:10px;width:100%;}
+    body {
+        margin: 0;
+        background: #0d1117;
+        color: white;
+        font-family: sans-serif;
+    }
 
-  .row label{font-size:12px;margin-bottom:4px;color:#cbd5e1;}
+    #chartContainer {
+        width: 100vw;
+        height: 50vh;
+    }
 
-  .row input,.row select{
-    padding:10px;border-radius:10px;border:1px solid #334155;background:#0e0e12;color:#fff;font-size:14px;width:100%;
-  }
+    canvas {
+        width: 100% !important;
+        height: 100% !important;
+    }
 
-  .btnBox{display:flex;gap:10px;margin:8px 0;}
-  .btn{flex:1;padding:12px;border:none;border-radius:12px;font-size:16px;font-weight:700;color:#111;cursor:pointer;}
-  .btnH{background:linear-gradient(90deg,#16a34a,#22c55e);}  
-  .btnL{background:linear-gradient(90deg,#ef4444,#f43f5e);}  
+    .panel {
+        padding: 14px;
+        background: #111;
+        border-top: 1px solid #222;
+    }
 
-  .list{margin-top:8px;max-height:160px;overflow:auto;border-top:1px dashed #334155;padding-top:8px;font-size:12px}
-  .ticket{display:flex;justify-content:space-between;gap:8px;padding:6px 8px;border:1px solid #334155;border-radius:8px;margin-bottom:6px;background:#0c0c12}
-  .ticket.win{border-color:rgba(34,197,94,.6)}
-  .ticket.lose{border-color:rgba(239,68,68,.6)}
+    select, input {
+        width: 100%;
+        padding: 8px;
+        background: #222;
+        color: #fff;
+        border: 1px solid #444;
+        margin-bottom: 10px;
+        border-radius: 4px;
+    }
 
-  #rateText{position:absolute;top:6px;right:10px;background:rgba(0,0,0,0.45);padding:6px 10px;border-radius:10px;font-size:14px;border:1px solid #444;}
+    .btn-container {
+        display: flex;
+        gap: 8px;
+    }
+
+    .btn {
+        flex: 1;
+        text-align: center;
+        padding: 14px;
+        font-weight: bold;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .btn-high { background: #0dbf39; }
+    .btn-low  { background: #c42232; }
+
+    .balance-box {
+        padding: 8px 0;
+        font-size: 16px;
+    }
+
+    /* ▼ 追加修正（ラインが出ない問題を解決） */
+    .entry-line-high {
+        border-top: 2px solid #00ff00 !important;
+    }
+    .entry-line-low {
+        border-top: 2px solid #ff0044 !important;
+    }
 </style>
 </head>
 <body>
-<div id="title">USOTORE</div>
-<div id="rateText">---</div>
-<div id="wrap">
-  <canvas id="chart"></canvas>
-  <div class="panel">
-    <div class="row">
-      <label>判定時間</label>
-      <select id="expirySelect">
-        <option value="0.5">30秒</option>
-        <option value="1">1分</option>
-        <option value="5">5分</option>
-        <option value="10">10分</option>
-        <option value="20">20分</option>
-        <option value="custom">任意（分）</option>
-      </select>
-    </div>
-    <div class="row" id="customRow" style="display:none;">
-      <label>任意分数</label>
-      <input id="expiryCustomMin" type="number" value="3" min="0.5" max="240" step="0.5">
-    </div>
-    <div class="row"><label>賭け金</label><input id="stake" type="number" value="1000" min="100" step="100"></div>
-    <div class="row"><label>ペイアウト</label><input id="payout" type="number" value="1.8" step="0.05"></div>
-    <div class="btnBox">
-      <button id="btnHigh" class="btn btnH">HIGH</button>
-      <button id="btnLow" class="btn btnL">LOW</button>
-    </div>
-    <div class="row"><label>残高</label><div id="bal">¥1,000,000</div></div>
-    <div style="position:absolute;top:50px;right:10px;display:flex;flex-direction:column;gap:6px;z-index:20;">
-      <button id="zoomIn" style="padding:6px 10px;border-radius:8px;border:1px solid #444;background:#222;color:#fff;font-size:14px;">＋</button>
-      <button id="zoomOut" style="padding:6px 10px;border-radius:8px;border:1px solid #444;background:#222;color:#fff;font-size:14px;">－</button>
-    </div>
-    <div class="list" id="tickets"></div>
-  </div>
+
+<div id="chartContainer">
+    <canvas id="chart"></canvas>
 </div>
 
+<div class="panel">
+    <label>判定時間</label>
+    <select id="duration">
+        <option value="30">30秒</option>
+        <option value="60">60秒</option>
+        <option value="120">120秒</option>
+    </select>
+
+    <label>賭け金</label>
+    <input id="amount" type="number" value="1000"/>
+
+    <label>ペイアウト</label>
+    <input id="payout" type="number" value="1.8"/>
+
+    <div class="btn-container">
+        <div class="btn btn-high" onclick="placeOrder('HIGH')">HIGH</div>
+        <div class="btn btn-low" onclick="placeOrder('LOW')">LOW</div>
+    </div>
+
+    <div class="balance-box">残高：<span id="balance">¥1,000,000</span></div>
+    <div id="log" style="font-size:14px;"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-/* ================================
-   初期データ
-================================ */
 let balance = 1000000;
-let candles = [];
-let baseVisible = 50;
+let chart;
+let entryLines = [];
 
-/* チャート準備 */
-const cvs = document.getElementById("chart");
-const ctx = cvs.getContext("2d");
+document.addEventListener("DOMContentLoaded", () => {
+    const ctx = document.getElementById("chart").getContext("2d");
+    chart = new Chart(ctx, {
+        type: "candlestick",
+        data: {
+            datasets: [{
+                label: "USOTORE",
+                data: generateFakeData()
+            }]
+        },
+        options: {
+            plugins: { legend: { display: false }},
+            scales: {
+                x: { display: false },
+                y: { display: false }
+            }
+        }
+    });
+});
 
-function resize(){
-  cvs.width = window.innerWidth;
-  cvs.height = window.innerHeight * 0.52;
-}
-resize();
-window.addEventListener("resize", resize);
-
-/* ローソクデータ生成 */
-function gen(){
-  if(!candles.length){
-    let price = 100;
-    for(let i=0;i<200;i++){
-      const o = price;
-      const c = o + (Math.random()*4-2);
-      const h = Math.max(o,c) + Math.random()*2;
-      const l = Math.min(o,c) - Math.random()*2;
-      candles.push({o,h,l,c});
-      price = c;
+function generateFakeData() {
+    let data = [];
+    let value = 143.300;
+    for (let i = 0; i < 60; i++) {
+        let open = value + (Math.random() - 0.5) * 0.05;
+        let close = open + (Math.random() - 0.5) * 0.05;
+        let high = Math.max(open, close) + Math.random() * 0.02;
+        let low = Math.min(open, close) - Math.random() * 0.02;
+        value = close;
+        data.push({ o: open, h: high, l: low, c: close });
     }
-  } else {
-    const last = candles[candles.length-1].c;
-    const o = last;
-    const c = o + (Math.random()*4-2);
-    const h = Math.max(o,c) + Math.random()*2;
-    const l = Math.min(o,c) - Math.random()*2;
-    candles.push({o,h,l,c});
-  }
+    return data;
 }
-setInterval(gen,1000);
 
-/* 描画 */
-function render(){
-  const w = cvs.width;
-  const h = cvs.height;
-  ctx.clearRect(0,0,w,h);
+function placeOrder(direction) {
+    const dataset = chart.data.datasets[0].data;
+    const latest = dataset[dataset.length - 1].c; // 終値
+    const entryY = chart.scales.y.getPixelForValue(latest);
 
-  const total = candles.length;
-  const visible = Math.min(total, baseVisible);
-  const start = Math.max(0, total - visible);
-  const slice = candles.slice(start);
-  if(slice.length === 0) return;
+    addEntryLine(entryY, direction);
 
-  const highs = slice.map(c=>c.h);
-  const lows  = slice.map(c=>c.l);
-  const vmax = Math.max(...highs);
-  const vmin = Math.min(...lows);
-
-  const x = i => 20 + i * (w - 40) / Math.max(1, slice.length - 1);
-  const y = v => (h - 20) - (v - vmin) / (vmax - vmin + 1e-9) * (h - 40);
-
-  // グリッド
-  ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-  for(let i=0;i<5;i++){
-    const gy = 20 + i * ((h - 40) / 5);
-    ctx.beginPath();
-    ctx.moveTo(20, gy);
-    ctx.lineTo(w-20, gy);
-    ctx.stroke();
-  }
-
-  // ローソク
-  const barW = Math.max(2, (w - 40) / visible * 0.55);
-  for(let i=0;i<slice.length;i++){
-    const c = slice[i];
-    const X = x(i);
-    const yo = y(c.o);
-    const yc = y(c.c);
-    const yh = y(c.h);
-    const yl = y(c.l);
-
-    ctx.strokeStyle="#999";
-    ctx.beginPath();
-    ctx.moveTo(X, yh);
-    ctx.lineTo(X, yl);
-    ctx.stroke();
-
-    ctx.fillStyle = (c.c >= c.o) ? "#22c55e" : "#ef4444";
-    ctx.fillRect(X-barW/2, Math.min(yo,yc), barW, Math.abs(yo-yc) || 1);
-  }
-
-  requestAnimationFrame(render);
+    log(`【${direction}】 ${latest.toFixed(3)}`);
 }
-render();
 
-/* ================================
-   HIGH / LOW
-================================ */
-const expirySelect = document.getElementById("expirySelect");
-const customRow = document.getElementById("customRow");
-const expiryCustomMin = document.getElementById("expiryCustomMin");
-const stakeInput = document.getElementById("stake");
-const payoutInput = document.getElementById("payout");
-const balEl = document.getElementById("bal");
-const listEl = document.getElementById("tickets");
+function addEntryLine(y, direction) {
+    const line = document.createElement("div");
+    line.style.position = "absolute";
+    line.style.top = `${y}px`;
+    line.style.left = "0px";
+    line.style.width = "100%";
+    line.style.pointerEvents = "none";
 
-expirySelect.onchange = () => {
-  customRow.style.display = (expirySelect.value==="custom") ? "block" : "none";
-};
-
-function doBet(dir){
-  const stake = Number(stakeInput.value);
-  const payout = Number(payoutInput.value);
-  const expiry = (expirySelect.value==="custom") ? Number(expiryCustomMin.value) : Number(expirySelect.value);
-
-  if(stake > balance){
-    alert("残高不足です");
-    return;
-  }
-
-  balance -= stake;
-  balEl.textContent = "¥" + balance.toLocaleString();
-
-  const item = document.createElement("div");
-  item.className = "ticket";
-  item.textContent = dir+" / 判定中…";
-  listEl.prepend(item);
-
-  const ref = candles[candles.length-1].c;
-  setTimeout(()=>{
-    const now = candles[candles.length-1].c;
-    const win = (dir==="HIGH") ? now>ref : now<ref;
-    const result = win ? "win" : "lose";
-    item.classList.add(result);
-    item.textContent = dir+" / "+(win?"勝ち":"負け");
-
-    if(win){
-      const gain = Math.round(stake * (payout - 1));
-      balance += stake + gain;
+    if (direction === "HIGH") {
+        line.classList.add("entry-line-high");
+    } else {
+        line.classList.add("entry-line-low");
     }
-    balEl.textContent = "¥" + balance.toLocaleString();
-  }, expiry * 1000);
+
+    document.body.appendChild(line);
+    entryLines.push(line);
 }
 
-document.getElementById("btnHigh").onclick=()=>doBet("HIGH");
-document.getElementById("btnLow").onclick =()=>doBet("LOW");
-
-/* Zoom */
-document.getElementById("zoomIn").onclick  =()=>{baseVisible=Math.max(10,baseVisible-5)};
-document.getElementById("zoomOut").onclick =()=>{baseVisible=Math.min(200,baseVisible+5)};
+function log(text) {
+    const logbox = document.getElementById("log");
+    logbox.innerHTML = text + "<br>" + logbox.innerHTML;
+}
 </script>
+
 </body>
 </html>
