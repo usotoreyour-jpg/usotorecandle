@@ -25,6 +25,7 @@
         height: 350px;
         width: 100%;
         display: block;
+        background: #060606;
     }
 
     canvas {
@@ -74,7 +75,6 @@
         padding: 12px;
     }
 </style>
-
 </head>
 
 <body>
@@ -109,15 +109,8 @@
     <footer id="balance">残高 ¥1,000,000</footer>
 </div>
 
-<!-- Chart.js本体（ローカル埋め込み） -->
-<script>
-/*!
- * Chart.js v4.4.0
- * (一部省略)
- * これは公式CDNからコピーした完全版です
- */
- /* ====== ここにminified Chart.jsのソースが入ります ====== */
-</script>
+<!-- Chart.js（CDN版）-->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
 /****************************************************
@@ -141,6 +134,7 @@ function generateData() {
     chart.update();
 }
 
+// Chart.js v4
 const chart = new Chart(ctx, {
     type: "line",
     data: {
@@ -164,6 +158,7 @@ const chart = new Chart(ctx, {
     }
 });
 
+// 0.8秒ごとにデータ更新
 setInterval(generateData, 800);
 </script>
 
