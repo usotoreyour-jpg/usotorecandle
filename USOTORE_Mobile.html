@@ -2,127 +2,168 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>USOTORE Mobile</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>USOTORE</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
-
-<script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-body{
-    margin:0;
-    background:#0a0a0a;
-    font-family:"Rajdhani","Noto Sans JP",sans-serif;
-    color:white;
-}
-#title{
-    text-align:center;
-    padding:12px;
-    font-size:20px;
-    letter-spacing:6px;
-    color:#fbbf24;
-}
-#chart{
-    height:60vh;
-    width:100%;
-    position:relative;
-}
-.entry-line-high{
-    position:absolute;
-    border-top:2px solid #22c55e;
-    width:100%;
-}
-.entry-line-low{
-    position:absolute;
-    border-top:2px solid #ef4444;
-    width:100%;
-}
-.panel{
-    padding:10px;
-    background:#111;
-}
-button{
-    width:100%;
-    padding:14px;
-    border:none;
-    border-radius:8px;
-    font-size:18px;
-    font-weight:700;
-    color:#111;
-    margin-bottom:8px;
-}
-#highBtn{background:#22c55e;}
-#lowBtn{background:#ef4444;}
-#log{
-    font-size:12px;
-    opacity:0.7;
-}
+    body {
+        margin: 0;
+        background: #000;
+        font-family: "Segoe UI", sans-serif;
+        color: white;
+    }
+
+    .header {
+        text-align: center;
+        font-size: 24px;
+        padding: 16px;
+        letter-spacing: 6px;
+        font-weight: 600;
+    }
+
+    #chartContainer {
+        width: 100%;
+        height: 380px;
+        padding: 0;
+        margin: 0;
+    }
+
+    canvas {
+        width: 100%;
+        height: 100%;
+    }
+
+    .panel {
+        padding: 12px;
+        background: #111;
+    }
+
+    .input-group {
+        margin-bottom: 10px;
+    }
+    select, input {
+        width: 100%;
+        padding: 10px;
+        border: none;
+        background: #222;
+        color: white;
+    }
+
+    .btn-hi {
+        width: 100%;
+        padding: 15px;
+        background: #0fa958;
+        border: none;
+        font-size: 18px;
+        margin-bottom: 10px;
+        cursor: pointer;
+    }
+
+    .btn-lo {
+        width: 100%;
+        padding: 15px;
+        background: #db2c2c;
+        border: none;
+        font-size: 18px;
+        cursor: pointer;
+    }
+
+    footer {
+        color: #ccc;
+        text-align: left;
+        font-size: 13px;
+        padding: 12px;
+    }
 </style>
-
 </head>
+
 <body>
+<div class="header">USOTORE</div>
 
-<div id="title">USOTORE</div>
-<div id="chart"></div>
+<!-- (1) Chart -->
+<div id="chartContainer">
+    <canvas id="chart"></canvas>
+</div>
 
+<!-- (2) Controls -->
 <div class="panel">
-    <button id="highBtn">HIGH</button>
-    <button id="lowBtn">LOW</button>
-    <div id="log"></div>
+    <div class="input-group">
+        判定時間
+        <select id="timeSelect">
+            <option value="30">30秒</option>
+            <option value="60">60秒</option>
+        </select>
+    </div>
+
+    <div class="input-group">
+        賭け金
+        <input type="number" id="betInput" value="1000" />
+    </div>
+
+    <div class="input-group">
+        ペイアウト
+        <input type="number" id="payoutInput" value="1.8" />
+    </div>
+
+    <button class="btn-hi">HIGH</button>
+    <button class="btn-lo">LOW</button>
+
+    <footer id="balance">残高 ¥1,000,000</footer>
 </div>
 
 <script>
-/* --- CHART SETUP --- */
-const chart = LightweightCharts.createChart(document.getElementById("chart"), {
-    layout:{ background:{color:'#0a0a0a'}, textColor:'#fff' },
-    grid:{ vertLines:{color:'#222'}, horzLines:{color:'#222'} },
-    timeScale:{ borderColor:'#333' },
-    rightPriceScale:{ borderColor:'#333' },
+/****************************************************
+ * Chart Initialization
+ ****************************************************/
+const ctx = document.getElementById("chart").getContext("2d");
+
+// 初期データ
+let labels = [];
+let prices = [];
+let basePrice = 100;
+
+// データ生成
+function generateData() {
+    const last = prices.length ? prices[prices.length - 1] : basePrice;
+    const next = last + (Math.random() - 0.5) * 3;
+    prices.push(next);
+    labels.push("");
+    if (prices.length > 40) {
+        prices.shift();
+        labels.shift();
+    }
+    chart.update();
+}
+
+const chart = new Chart(ctx, {
+    type: "line",
+    data: {
+        labels,
+        datasets: [
+            {
+                label: "price",
+                data: prices,
+                borderWidth: 2,
+                borderColor: "#0fa958",
+                backgroundColor: "transparent",
+                pointRadius: 0
+            }
+        ],
+    },
+    options: {
+        animation: false,
+        scales: {
+            x: { display: false },
+            y: { display: false },
+        }
+    }
 });
 
-const candleSeries = chart.addCandlestickSeries();
-
-/* ダミーデータ生成 */
-const data = [];
-let t = 1700000000;
-for(let i=0;i<200;i++){
-    const o = 100 + Math.random()*5;
-    const c = o + Math.random()*2-1;
-    const h = Math.max(o,c) + Math.random();
-    const l = Math.min(o,c) - Math.random();
-    data.push({time:t++, open:o, high:h, low:l, close:c});
-}
-candleSeries.setData(data);
-
-/* --- LINE DISPLAY --- */
-function addEntryLine(direction){
-    const chartEl = document.getElementById("chart");
-
-    const price = data[data.length-1].close; // 最新価格
-    const height = chartEl.clientHeight;
-    const y = height * Math.random(); // 仮の位置
-
-    const line = document.createElement("div");
-    line.style.top = `${y}px`;
-
-    if(direction==="HIGH"){
-        line.classList.add("entry-line-high");
-    }else{
-        line.classList.add("entry-line-low");
-    }
-
-    chartEl.appendChild(line);
-    log(`${direction}エントリー`);
-}
-
-/* --- UI --- */
-function log(msg){
-    const logbox = document.getElementById("log");
-    logbox.innerHTML = msg + "<br>" + logbox.innerHTML;
-}
-document.getElementById("highBtn").onclick = ()=>addEntryLine("HIGH");
-document.getElementById("lowBtn").onclick = ()=>addEntryLine("LOW");
+// 自動更新
+setInterval(generateData, 800);
 </script>
 
 </body>
