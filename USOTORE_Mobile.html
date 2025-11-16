@@ -40,6 +40,7 @@
 
     .input-group {
         margin-bottom: 10px;
+        font-size: 14px;
     }
     select, input {
         width: 100%;
@@ -103,13 +104,13 @@
         <input type="number" id="payoutInput" value="1.8" />
     </div>
 
-    <button class="btn-hi">HIGH</button>
-    <button class="btn-lo">LOW</button>
+    <button class="btn-hi">ハイ（HIGH）</button>
+    <button class="btn-lo">ロー（LOW）</button>
 
     <footer id="balance">残高 ¥1,000,000</footer>
 </div>
 
-<!-- Chart.js（CDN） -->
+<!-- Chart.js（安定動作のためCDN版／後ほど完全オフラインにも対応可） -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
