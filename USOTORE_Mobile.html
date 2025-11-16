@@ -4,193 +4,125 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>USOTORE Mobile</title>
+
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
 
+<script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+
 <style>
-:root{
-    --bg:#0a0a0a;
-    --panel:#111;
-    --text:#f3f4f6;
-    --win:#22c55e;
-    --lose:#ef4444;
-}
-
-/* Reset */
-*{box-sizing:border-box;margin:0;padding:0}
 body{
-    background:var(--bg);
-    color:var(--text);
+    margin:0;
+    background:#0a0a0a;
     font-family:"Rajdhani","Noto Sans JP",sans-serif;
+    color:white;
 }
-
-/* Layout */
-#wrap{
-    display:flex;
-    flex-direction:column;
-    height:100vh;
-    width:100%;
-}
-
 #title{
     text-align:center;
-    font-size:28px;
     padding:12px;
-    font-weight:700;
+    font-size:20px;
     letter-spacing:6px;
+    color:#fbbf24;
 }
-
-/* Chart area */
 #chart{
-    flex:1;
+    height:60vh;
     width:100%;
-    background:#0b0b10;
-    display:block;
     position:relative;
 }
-
-/* Panel */
+.entry-line-high{
+    position:absolute;
+    border-top:2px solid #22c55e;
+    width:100%;
+}
+.entry-line-low{
+    position:absolute;
+    border-top:2px solid #ef4444;
+    width:100%;
+}
 .panel{
-    width:100%;
-    background:#111;
-    border-top:1px solid #333;
-    padding:12px;
-}
-
-.row{
-    display:flex;
-    flex-direction:column;
-    margin-bottom:10px;
-}
-.row label{
-    font-size:12px;
-    opacity:0.7;
-    margin-bottom:4px;
-}
-input,select{
     padding:10px;
-    width:100%;
-    background:#222;
-    border:none;
-    color:#fff;
-    border-radius:4px;
+    background:#111;
 }
-
-/* Buttons */
 button{
     width:100%;
     padding:14px;
     border:none;
-    border-radius:6px;
-    color:#fff;
+    border-radius:8px;
     font-size:18px;
     font-weight:700;
-    margin-bottom:10px;
+    color:#111;
+    margin-bottom:8px;
 }
-#highBtn{background:#16a34a;}
-#lowBtn{background:#dc2626;}
-
-#balance{
-    font-size:14px;
-    opacity:0.85;
-    padding:4px;
-}
+#highBtn{background:#22c55e;}
+#lowBtn{background:#ef4444;}
 #log{
     font-size:12px;
-    opacity:0.8;
-    padding:6px;
-}
-
-/* Entry line */
-.entry-line{
-    position:absolute;
-    width:100%;
-    height:2px;
-    left:0;
-    z-index:9999;
-}
-.entry-high{
-    background:#22c55e;
-}
-.entry-low{
-    background:#ef4444;
+    opacity:0.7;
 }
 </style>
+
 </head>
-
 <body>
-<div id="wrap">
 
-    <div id="title">USOTORE</div>
+<div id="title">USOTORE</div>
+<div id="chart"></div>
 
-    <div id="chart"></div>
-
-    <div class="panel">
-        <div class="row">
-            <label>判定時間</label>
-            <select id="time">
-                <option value="30">30秒</option>
-                <option value="60">60秒</option>
-            </select>
-        </div>
-
-        <div class="row">
-            <label>賭け金</label>
-            <input id="bet" type="number" value="1000">
-        </div>
-
-        <div class="row">
-            <label>ペイアウト</label>
-            <input id="payout" type="number" value="1.8">
-        </div>
-
-        <button id="highBtn">HIGH</button>
-        <button id="lowBtn">LOW</button>
-
-        <div id="balance">残高 ¥1,000,000</div>
-        <div id="log"></div>
-    </div>
-
+<div class="panel">
+    <button id="highBtn">HIGH</button>
+    <button id="lowBtn">LOW</button>
+    <div id="log"></div>
 </div>
 
-
 <script>
-let balance = 1000000;
-const entryLines = [];
+/* --- CHART SETUP --- */
+const chart = LightweightCharts.createChart(document.getElementById("chart"), {
+    layout:{ background:{color:'#0a0a0a'}, textColor:'#fff' },
+    grid:{ vertLines:{color:'#222'}, horzLines:{color:'#222'} },
+    timeScale:{ borderColor:'#333' },
+    rightPriceScale:{ borderColor:'#333' },
+});
 
-function addEntryLine(y, direction){
+const candleSeries = chart.addCandlestickSeries();
+
+/* ダミーデータ生成 */
+const data = [];
+let t = 1700000000;
+for(let i=0;i<200;i++){
+    const o = 100 + Math.random()*5;
+    const c = o + Math.random()*2-1;
+    const h = Math.max(o,c) + Math.random();
+    const l = Math.min(o,c) - Math.random();
+    data.push({time:t++, open:o, high:h, low:l, close:c});
+}
+candleSeries.setData(data);
+
+/* --- LINE DISPLAY --- */
+function addEntryLine(direction){
+    const chartEl = document.getElementById("chart");
+
+    const price = data[data.length-1].close; // 最新価格
+    const height = chartEl.clientHeight;
+    const y = height * Math.random(); // 仮の位置
+
     const line = document.createElement("div");
-    line.classList.add("entry-line");
     line.style.top = `${y}px`;
 
-    if(direction === "HIGH"){
-        line.classList.add("entry-high");
+    if(direction==="HIGH"){
+        line.classList.add("entry-line-high");
     }else{
-        line.classList.add("entry-low");
+        line.classList.add("entry-line-low");
     }
 
-    document.querySelector("#chart").appendChild(line);
-    entryLines.push(line);
+    chartEl.appendChild(line);
+    log(`${direction}エントリー`);
 }
 
-function log(text){
+/* --- UI --- */
+function log(msg){
     const logbox = document.getElementById("log");
-    logbox.innerHTML = text + "<br>" + logbox.innerHTML;
+    logbox.innerHTML = msg + "<br>" + logbox.innerHTML;
 }
-
-/* Button events */
-document.getElementById("highBtn").addEventListener("click",()=>{
-    const chart = document.getElementById("chart");
-    const y = chart.clientHeight/2;
-    addEntryLine(y,"HIGH");
-    log("HIGHエントリー");
-});
-
-document.getElementById("lowBtn").addEventListener("click",()=>{
-    const chart = document.getElementById("chart");
-    const y = chart.clientHeight/2;
-    addEntryLine(y,"LOW");
-    log("LOWエントリー");
-});
+document.getElementById("highBtn").onclick = ()=>addEntryLine("HIGH");
+document.getElementById("lowBtn").onclick = ()=>addEntryLine("LOW");
 </script>
 
 </body>
