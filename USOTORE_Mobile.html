@@ -4,25 +4,24 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>USOTORE Mobile</title>
-<meta name="description" content="USOTORE｜お金が動かないトレード風体験ツール。ギャンブルやバイナリーオプションと距離を置きたい方向けの、安全なチャート風シミュレーションです。"/>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg:#0a0a0a;--panel:#111;--text:#f3f4f6;--win:#22c55e;--lose:#ef4444;--gold:#fbbf24;--cyan:#38bdf8;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  body{background:var(--bg);color:var(--text);font-family:"Rajdhani","Noto Sans JP",system-ui,sans-serif;}
-
-  #title{text-align:center;font-size:22px;letter-spacing:6px;font-weight:700;color:rgba(251,191,36,0.9);padding:12px 0;text-shadow:0 0 12px rgba(251,191,36,0.35);}  
+  body{background:var(--bg);color:var(--text);font-family:"Rajdhani","Noto Sans JP",system-ui,sans-serif;overflow:hidden;}
+  #title{text-align:center;font-size:22px;letter-spacing:6px;font-weight:700;color:rgba(251,191,36,0.9);padding:10px 0;text-shadow:0 0 12px rgba(251,191,36,0.35);}  
   #wrap{display:flex;flex-direction:column;height:100vh;width:100vw;}
   #chart{flex:1;width:100%;background:#0b0b10;display:block;}
-
   .panel{width:100%;background:#111;border-top:1px solid #333;padding:12px;overflow-y:auto;}  
   .row{display:flex;flex-direction:column;margin-bottom:10px;width:100%;}
+
   .row label{font-size:12px;margin-bottom:4px;color:#cbd5e1;}
 
   .row input,.row select{
-    padding:10px;border-radius:10px;border:1px solid #334155;background:#0e0e12;color:#fff;font-size:14px;width:100%;}
+    padding:10px;border-radius:10px;border:1px solid #334155;background:#0e0e12;color:#fff;font-size:14px;width:100%;
+  }
 
   .btnBox{display:flex;gap:10px;margin:8px 0;}
   .btn{flex:1;padding:12px;border:none;border-radius:12px;font-size:16px;font-weight:700;color:#111;cursor:pointer;}
@@ -38,13 +37,10 @@
 </style>
 </head>
 <body>
-
 <div id="title">USOTORE</div>
 <div id="rateText">---</div>
-
 <div id="wrap">
   <canvas id="chart"></canvas>
-
   <div class="panel">
     <div class="row">
       <label>判定時間</label>
@@ -57,151 +53,90 @@
         <option value="custom">任意（分）</option>
       </select>
     </div>
-
     <div class="row" id="customRow" style="display:none;">
       <label>任意分数</label>
       <input id="expiryCustomMin" type="number" value="3" min="0.5" max="240" step="0.5">
     </div>
-
     <div class="row"><label>賭け金</label><input id="stake" type="number" value="1000" min="100" step="100"></div>
     <div class="row"><label>ペイアウト</label><input id="payout" type="number" value="1.8" step="0.05"></div>
-
     <div class="btnBox">
       <button id="btnHigh" class="btn btnH">HIGH</button>
       <button id="btnLow" class="btn btnL">LOW</button>
     </div>
-
     <div class="row"><label>残高</label><div id="bal">¥1,000,000</div></div>
-
     <div style="position:absolute;top:50px;right:10px;display:flex;flex-direction:column;gap:6px;z-index:20;">
       <button id="zoomIn" style="padding:6px 10px;border-radius:8px;border:1px solid #444;background:#222;color:#fff;font-size:14px;">＋</button>
       <button id="zoomOut" style="padding:6px 10px;border-radius:8px;border:1px solid #444;background:#222;color:#fff;font-size:14px;">－</button>
     </div>
-
     <div class="list" id="tickets"></div>
   </div>
 </div>
 
 <script>
-// おなじみの JavaScript（自由に改変してOK）
+/* ================================
+   初期データ
+================================ */
+let balance = 1000000;
+let candles = [];
+let baseVisible = 50;
 
-const cvs = document.getElementById('chart');
-const ctx = cvs.getContext('2d');
+/* チャート準備 */
+const cvs = document.getElementById("chart");
+const ctx = cvs.getContext("2d");
 
 function resize(){
-  cvs.width  = window.innerWidth;
-  cvs.height = window.innerHeight * 0.55;
+  cvs.width = window.innerWidth;
+  cvs.height = window.innerHeight * 0.52;
 }
-window.addEventListener('resize', resize);
 resize();
+window.addEventListener("resize", resize);
 
-let rate = 150.000;
-let balance = 1000000;
-let payout  = 1.8;
-let stake   = 1000;
-let candles = [];
-let tickets = [];
-let volBase = 0.004;
-let last    = performance.now();
-let baseVisible = 120;
-
-// 初期ローソク生成
-for(let i=0;i<200;i++){
-  const prev = i ? candles[i-1].c : rate;
-  const c = +(prev * (Math.random()-0.5)*volBase + prev).toFixed(3);
-  const spread = Math.abs(c - prev)*0.6 + 0.005;
-  const h = Math.max(prev,c) + spread;
-  const l = Math.min(prev,c) - spread;
-  candles.push({o:prev,h,l,c});
-  rate = c;
-}
-
-const sel = document.getElementById('expirySelect');
-const customRow = document.getElementById('customRow');
-const customMin = document.getElementById('expiryCustomMin');
-sel.addEventListener('change', () => customRow.style.display = sel.value === 'custom' ? '' : 'none');
-
-document.getElementById('stake').addEventListener('change', e => stake = +e.target.value || 1000);
-document.getElementById('payout').addEventListener('change', e => payout = +e.target.value || 1.8);
-
-document.getElementById('btnHigh').addEventListener('click', () => enter('HIGH'));
-document.getElementById('btnLow').addEventListener('click',  () => enter('LOW'));
-
-function getExpirySeconds(){
-  if(sel.value === 'custom'){
-    return Math.max(30, (+customMin.value || 1) * 60);
-  }
-  return (+sel.value) * 60;
-}
-
-let ticketId = 1;
-
-function enter(dir){
-  if(balance < stake){
-    alert('残高不足です');
-    return;
-  }
-  const sec = getExpirySeconds();
-
-  const t = {
-    id: ticketId++,
-    dir,
-    entry: rate,
-    expiry: sec,
-    end: Date.now() + sec * 1000,
-    state: 'pending'
-  };
-  tickets.push(t);
-  render();
-}
-
-function step(){
-  rate = +(rate * (1 + (Math.random()-0.5)*volBase)).toFixed(3);
-}
-
-function push(){
-  const o = candles.length ? candles[candles.length-1].c : rate;
-  step();
-  const c = rate;
-  const spread = Math.abs(c - o)*0.6 + 0.005;
-  const h = Math.max(o,c) + spread;
-  const l = Math.min(o,c) - spread;
-  candles.push({o,h,l,c});
-  if(candles.length > 400) candles.shift();
-}
-
-function settle(){
-  const now = Date.now();
-  for(const t of tickets){
-    if(t.state === 'pending' && now >= t.end){
-      const win = t.dir === 'HIGH' ? (rate > t.entry) : (rate < t.entry);
-      t.state = win ? 'win' : 'lose';
-      balance += win ? Math.round(stake * (payout - 1)) : -stake;
+/* ローソクデータ生成 */
+function gen(){
+  if(!candles.length){
+    let price = 100;
+    for(let i=0;i<200;i++){
+      const o = price;
+      const c = o + (Math.random()*4-2);
+      const h = Math.max(o,c) + Math.random()*2;
+      const l = Math.min(o,c) - Math.random()*2;
+      candles.push({o,h,l,c});
+      price = c;
     }
+  } else {
+    const last = candles[candles.length-1].c;
+    const o = last;
+    const c = o + (Math.random()*4-2);
+    const h = Math.max(o,c) + Math.random()*2;
+    const l = Math.min(o,c) - Math.random()*2;
+    candles.push({o,h,l,c});
   }
 }
+setInterval(gen,1000);
 
+/* 描画 */
 function render(){
   const w = cvs.width;
   const h = cvs.height;
   ctx.clearRect(0,0,w,h);
 
-  const total   = candles.length;
+  const total = candles.length;
   const visible = Math.min(total, baseVisible);
-  const start   = Math.max(0, total - visible);
-  const slice   = candles.slice(start);
+  const start = Math.max(0, total - visible);
+  const slice = candles.slice(start);
   if(slice.length === 0) return;
 
   const highs = slice.map(c=>c.h);
   const lows  = slice.map(c=>c.l);
-  const vmin  = Math.min(...lows);
-  const vmax  = Math.max(...highs);
+  const vmax = Math.max(...highs);
+  const vmin = Math.min(...lows);
 
   const x = i => 20 + i * (w - 40) / Math.max(1, slice.length - 1);
   const y = v => (h - 20) - (v - vmin) / (vmax - vmin + 1e-9) * (h - 40);
 
+  // グリッド
   ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-  for(let i=0;i<=5;i++){
+  for(let i=0;i<5;i++){
     const gy = 20 + i * ((h - 40) / 5);
     ctx.beginPath();
     ctx.moveTo(20, gy);
@@ -209,6 +144,7 @@ function render(){
     ctx.stroke();
   }
 
+  // ローソク
   const barW = Math.max(2, (w - 40) / visible * 0.55);
   for(let i=0;i<slice.length;i++){
     const c = slice[i];
@@ -217,74 +153,76 @@ function render(){
     const yc = y(c.c);
     const yh = y(c.h);
     const yl = y(c.l);
-    const up = c.c >= c.o;
 
-    ctx.strokeStyle = up ? '#22c55e' : '#ef4444';
+    ctx.strokeStyle="#999";
     ctx.beginPath();
     ctx.moveTo(X, yh);
     ctx.lineTo(X, yl);
     ctx.stroke();
 
-    const top = Math.min(yo, yc);
-    const bot = Math.max(yo, yc);
-    const hh  = Math.max(2, bot - top);
-    ctx.fillStyle = up ? '#22c55e55' : '#ef444455';
-    ctx.fillRect(X - barW/2, top, barW, hh);
-    ctx.strokeRect(X - barW/2, top, barW, hh);
+    ctx.fillStyle = (c.c >= c.o) ? "#22c55e" : "#ef4444";
+    ctx.fillRect(X-barW/2, Math.min(yo,yc), barW, Math.abs(yo-yc) || 1);
   }
 
-  const curX = x(slice.length - 1);
-  const curY = y(rate);
-  ctx.strokeStyle = '#fbbf24';
-  ctx.beginPath();
-  ctx.moveTo(curX, 20);
-  ctx.lineTo(curX, h-20);
-  ctx.stroke();
-
-  ctx.strokeStyle = '#38bdf8';
-  ctx.beginPath();
-  ctx.moveTo(20, curY);
-  ctx.lineTo(w-20, curY);
-  ctx.stroke();
-
-  document.getElementById('rateText').textContent = rate.toFixed(3);
-  document.getElementById('bal').textContent      = '¥' + balance.toLocaleString('ja-JP');
-
-  const list = document.getElementById('tickets');
-  list.innerHTML = tickets.slice().reverse().map(t => {
-    const remain = Math.max(0, Math.ceil((t.end - Date.now())/1000));
-    const m = Math.floor(remain/60);
-    const s = remain % 60;
-    const txt = t.state === 'pending'
-      ? (m>0 ? `${m}分${s}秒` : `${s}秒`)
-      : t.state.toUpperCase();
-    return `<div class="ticket ${t.state || ''}"><div>${t.dir} @ ${t.entry.toFixed(3)}</div><div>${txt}</div></div>`;
-  }).join('');
+  requestAnimationFrame(render);
 }
-
-function loop(ts){
-  if(ts - last >= 1000){
-    last = ts;
-    push();
-    settle();
-    render();
-  }
-  requestAnimationFrame(loop);
-}
-
-document.getElementById('zoomIn').addEventListener('click', ()=>{
-  baseVisible = Math.max(30, baseVisible - 10);
-  render();
-});
-document.getElementById('zoomOut').addEventListener('click', ()=>{
-  baseVisible = Math.min(300, baseVisible + 10);
-  render();
-});
-
 render();
-requestAnimationFrame(loop);
-</script>
 
+/* ================================
+   HIGH / LOW
+================================ */
+const expirySelect = document.getElementById("expirySelect");
+const customRow = document.getElementById("customRow");
+const expiryCustomMin = document.getElementById("expiryCustomMin");
+const stakeInput = document.getElementById("stake");
+const payoutInput = document.getElementById("payout");
+const balEl = document.getElementById("bal");
+const listEl = document.getElementById("tickets");
+
+expirySelect.onchange = () => {
+  customRow.style.display = (expirySelect.value==="custom") ? "block" : "none";
+};
+
+function doBet(dir){
+  const stake = Number(stakeInput.value);
+  const payout = Number(payoutInput.value);
+  const expiry = (expirySelect.value==="custom") ? Number(expiryCustomMin.value) : Number(expirySelect.value);
+
+  if(stake > balance){
+    alert("残高不足です");
+    return;
+  }
+
+  balance -= stake;
+  balEl.textContent = "¥" + balance.toLocaleString();
+
+  const item = document.createElement("div");
+  item.className = "ticket";
+  item.textContent = dir+" / 判定中…";
+  listEl.prepend(item);
+
+  const ref = candles[candles.length-1].c;
+  setTimeout(()=>{
+    const now = candles[candles.length-1].c;
+    const win = (dir==="HIGH") ? now>ref : now<ref;
+    const result = win ? "win" : "lose";
+    item.classList.add(result);
+    item.textContent = dir+" / "+(win?"勝ち":"負け");
+
+    if(win){
+      const gain = Math.round(stake * (payout - 1));
+      balance += stake + gain;
+    }
+    balEl.textContent = "¥" + balance.toLocaleString();
+  }, expiry * 1000);
+}
+
+document.getElementById("btnHigh").onclick=()=>doBet("HIGH");
+document.getElementById("btnLow").onclick =()=>doBet("LOW");
+
+/* Zoom */
+document.getElementById("zoomIn").onclick  =()=>{baseVisible=Math.max(10,baseVisible-5)};
+document.getElementById("zoomOut").onclick =()=>{baseVisible=Math.min(200,baseVisible+5)};
+</script>
 </body>
 </html>
-
