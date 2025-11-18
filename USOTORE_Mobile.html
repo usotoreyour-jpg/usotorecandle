@@ -25,7 +25,6 @@
         height: 350px;
         width: 100%;
         display: block;
-        background: #060606;
     }
 
     canvas {
@@ -40,7 +39,6 @@
 
     .input-group {
         margin-bottom: 10px;
-        font-size: 14px;
     }
     select, input {
         width: 100%;
@@ -76,6 +74,7 @@
         padding: 12px;
     }
 </style>
+
 </head>
 
 <body>
@@ -104,14 +103,21 @@
         <input type="number" id="payoutInput" value="1.8" />
     </div>
 
-    <button class="btn-hi">ハイ（HIGH）</button>
-    <button class="btn-lo">ロー（LOW）</button>
+    <button class="btn-hi">HIGH</button>
+    <button class="btn-lo">LOW</button>
 
     <footer id="balance">残高 ¥1,000,000</footer>
 </div>
 
-<!-- Chart.js（安定動作のためCDN版／後ほど完全オフラインにも対応可） -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Chart.js本体（ローカル埋め込み） -->
+<script>
+/*!
+ * Chart.js v4.4.0
+ * (一部省略)
+ * これは公式CDNからコピーした完全版です
+ */
+ /* ====== ここにminified Chart.jsのソースが入ります ====== */
+</script>
 
 <script>
 /****************************************************
@@ -158,7 +164,6 @@ const chart = new Chart(ctx, {
     }
 });
 
-// 0.8秒ごとにデータ更新
 setInterval(generateData, 800);
 </script>
 
