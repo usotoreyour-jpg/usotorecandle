@@ -1,34 +1,59 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Test Candlestick</title>
-<style>
-  body { margin: 0; background: #000; }
-  #chart { width: 100vw; height: 100vh; }
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>USOTORE Candlestick</title>
+  <style>
+    body { margin: 0; background: #000; color: white; font-family: "Segoe UI", sans-serif; }
+    #chartContainer { width: 100%; height: 400px; }
+    #panel { padding: 12px; background: #111; }
+    button { width: 49%; padding: 15px; margin-top: 10px; border: none; cursor: pointer; }
+    .btn-hi { background: #0fa958; }
+    .btn-lo { background: #db2c2c; }
+  </style>
 </head>
 <body>
 
-<div id="chart"></div>
+<div id="chartContainer"></div>
 
-<!-- Lightweight Charts CDN（これが絶対必要です）-->
+<div id="panel">
+  <button class="btn-hi" onclick="placeOrder('HIGH')">ハイ (HIGH)</button>
+  <button class="btn-lo" onclick="placeOrder('LOW')">ロー (LOW)</button>
+</div>
+
+<!-- Lightweight Charts -->
 <script src="https://unpkg.com/lightweight-charts@4.0.0/dist/lightweight-charts.standalone.production.js"></script>
 
 <script>
-const chart = LightweightCharts.createChart(document.getElementById('chart'), {
+// チャート生成
+const chart = LightweightCharts.createChart(document.getElementById('chartContainer'), {
     layout: { background: { color: '#000' }, textColor: '#fff' },
-    grid: { horzLines: { visible: false }, vertLines: { visible: false }},
+    grid: { vertLines: { color: 'rgba(255,255,255,0.1)' }, horzLines: { color: 'rgba(255,255,255,0.1)' } },
+    timeScale: { timeVisible: true, secondsVisible: true },
 });
 
+// ローソク足シリーズ
 const candleSeries = chart.addCandlestickSeries();
-candleSeries.setData([
-    { time: '2024-05-01', open: 100, high: 105, low: 99, close: 103 },
-    { time: '2024-05-02', open: 103, high: 108, low: 102, close: 107 },
-    { time: '2024-05-03', open: 107, high: 109, low: 103, close: 104 },
-]);
+
+// テストデータの生成
+const now = Math.floor(Date.now() / 1000);
+const data = [];
+for (let i = 0; i < 50; i++) {
+  const open = 100 + Math.random() * 2;
+  const close = open + (Math.random() - 0.5) * 3;
+  const high = Math.max(open, close) + Math.random() * 2;
+  const low = Math.min(open, close) - Math.random() * 2;
+  data.push({ time: now + i * 60, open, high, low, close });
+}
+candleSeries.setData(data);
+
+// 仮の注文処理
+function placeOrder(type) {
+  alert(`${type} の仮注文を行いました`);
+}
 </script>
 
 </body>
 </html>
+
