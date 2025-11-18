@@ -1,57 +1,45 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>USOTORE Candlestick</title>
-
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>USOTORE Candlestick Test</title>
 <style>
-    body { margin:0; background:#000; color:#fff; }
-    #chartContainer { width:100%; height:400px; }
+  body {
+    background: #000;
+    color: white;
+  }
+  #chart {
+    width: 100%;
+    height: 400px;
+  }
 </style>
-
 </head>
 <body>
 
-<div id="chartContainer"></div>
+<div id="chart"></div>
+
+<!-- Lightweight Charts CDN -->
 <script src="https://unpkg.com/lightweight-charts@4.0.0/dist/lightweight-charts.standalone.production.js"></script>
+
 <script>
-const chart = LightweightCharts.createChart(document.getElementById('chartContainer'), {
+// チャート生成
+const chart = LightweightCharts.createChart(document.getElementById('chart'), {
     layout: {
         background: { color: '#000' },
         textColor: '#fff',
     },
-    grid: {
-        vertLines: { color: 'rgba(255,255,255,0.1)' },
-        horzLines: { color: 'rgba(255,255,255,0.1)' },
-    },
-    timeScale: {
-        timeVisible: true,
-        secondsVisible: true,
-    }
 });
 
-const candleSeries = chart.addCandlestickSeries();
+// ローソク足シリーズ追加
+const series = chart.addCandlestickSeries();
 
-function generateRandomCandles() {
-    const now = Math.floor(Date.now() / 1000);
-    return [...Array(60)].map((_, i) => {
-        const open = 100 + Math.sin(i / 5) * 2 + Math.random() * 3;
-        const close = open + (Math.random() - 0.5) * 2;
-        const high = Math.max(open, close) + Math.random() * 2;
-        const low = Math.min(open, close) - Math.random() * 2;
-        return {
-            time: now + i * 60,
-            open: Number(open.toFixed(2)),
-            high: Number(high.toFixed(2)),
-            low: Number(low.toFixed(2)),
-            close: Number(close.toFixed(2)),
-        };
-    });
-}
-
-candleSeries.setData(generateRandomCandles());
+// ダミーデータを設定
+series.setData([
+    { time: '2024-11-01', open: 100, high: 105, low: 98, close: 102 },
+    { time: '2024-11-02', open: 102, high: 106, low: 100, close: 104 },
+    { time: '2024-11-03', open: 104, high: 108, low: 101, close: 107 },
+]);
 </script>
-
 </body>
 </html>
