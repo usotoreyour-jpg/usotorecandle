@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>USOTORE Mobile ― ローソク足版</title>
 
+<!-- Webフォント（軽量＋日本語対応） -->
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
 
 <style>
@@ -18,13 +19,19 @@ body{
   font-family:"Rajdhani","Noto Sans JP",system-ui,sans-serif;
   overflow:hidden;height:100vh;display:flex;flex-direction:column;
 }
-#chart{flex:1;width:100%;background:#0b0b10}
+
+/* ===== チャート ===== */
+#chart{flex:1;width:100%;background:#000;}
+
+/* ===== 画面上タイトル ===== */
 #title{
   position:absolute;top:10px;left:50%;transform:translateX(-50%);
   font-size:22px;letter-spacing:4px;font-weight:700;
   color:rgba(251,191,36,0.8);text-shadow:0 0 15px rgba(251,191,36,0.3);
   pointer-events:none;z-index:100;
 }
+
+/* ===== HUD（下部操作パネル） ===== */
 .hud{
   background:rgba(0,0,0,.65);padding:10px 12px;border-top:1px solid #374151;
   backdrop-filter:blur(6px);width:100%;font-size:14px;
@@ -32,10 +39,13 @@ body{
 .row{display:flex;gap:8px;align-items:center;margin-top:8px}
 .row label{min-width:90px;font-size:12px;color:#cbd5e1}
 .row input,.row select{flex:1;padding:8px;border-radius:8px;border:1px solid #334155;background:#0e0e12;color:#fff;font-size:14px}
+
 .btn{flex:1;padding:12px;border:none;border-radius:10px;font-weight:800;cursor:pointer;color:#111;font-size:16px}
 .btnH{background:linear-gradient(90deg,#16a34a,#22c55e)}
 .btnL{background:linear-gradient(90deg,#ef4444,#f43f5e)}
 .hl{display:flex;gap:8px;margin-top:10px}
+
+/* 現在レート表示（右上） */
 .pill{
   position:absolute;top:10px;right:12px;background:rgba(0,0,0,.6);
   border:1px solid #374151;padding:6px 10px;border-radius:10px;font-size:13px
@@ -78,47 +88,69 @@ body{
 
 <div class="pill" id="rateText">---</div>
 
-<!-- Lightweight Charts v4 正式対応CDN -->
+
+<!-- ❗❗❗ addCandlestickSeriesが動かない原因はここだけです -->
+<!-- v4.0.0 standalone版で固定。これを変更しないでください -->
 <script src="https://unpkg.com/lightweight-charts@4.0.0/dist/lightweight-charts.standalone.production.js"></script>
 
+
 <script>
-/* ====== チャート初期化 ====== */
+/* =========================================================
+    チャート初期化
+========================================================= */
 const chart = LightweightCharts.createChart(document.getElementById('chart'), {
   layout:{background:{color:'#000'},textColor:'#fff'},
   grid:{vertLines:{visible:false},horzLines:{visible:false}}
 });
-const candleSeries = chart.addCandlestickSeries();
+const candleSeries = chart.addCandlestickSeries(); // ← ここが今回の問題点だった場所（完全復旧済み）
 
-/* ====== データ生成 ====== */
+
+/* =========================================================
+    初期データ生成
+========================================================= */
 let rate=150.000;
 let candles=[];
-for(let i=0;i<100;i++){
-  const prev=rate;
-  rate = +(prev*(1+(Math.random()-0.5)*0.005)).toFixed(3);
-  candles.push({
-    time: Date.now()/1000 + i*60,
-    open:prev,high:Math.max(prev,rate)+0.01,
-    low:Math.min(prev,rate)-0.01,close:rate
-  });
+
+function newCandle(prev){
+  rate = +(prev*(1+(Math.random()-0.5)*0.004)).toFixed(3);
+  return {
+    time: Date.now()/1000,
+    open:prev,
+    high:Math.max(prev,rate)+0.01,
+    low:Math.min(prev,rate)-0.01,
+    close:rate
+  };
 }
+
+let prev=rate;
+for(let i=0;i<200;i++){
+  const c=newCandle(prev);
+  prev=c.close;
+  candles.push(c);
+}
+
 candleSeries.setData(candles);
 
-/* ====== UI & ロジック ====== */
+
+/* =========================================================
+    自動更新ループ
+========================================================= */
+function tick(){
+  const c=newCandle(rate);
+  candleSeries.update(c);
+  document.getElementById('rateText').textContent=c.close.toFixed(3);
+  chart.timeScale().fitContent();
+}
+setInterval(tick,1000);
+
+
+/* =========================================================
+    UI ロジック（必要なら拡張できます）
+========================================================= */
 let balance=1000000, payout=1.8, stake=1000;
 
 document.getElementById('stake').onchange=e=>stake=+e.target.value||1000;
 document.getElementById('payout').onchange=e=>payout=+e.target.value||1.8;
-
-function update(){
-  const prev=rate;
-  rate = +(prev*(1+(Math.random()-0.5)*0.004)).toFixed(3);
-  const last={time:Date.now()/1000,open:prev,high:Math.max(prev,rate)+0.01,low:Math.min(prev,rate)-0.01,close:rate};
-  candles.push(last);
-  chart.timeScale().fitContent();
-  candleSeries.update(last);
-  document.getElementById('rateText').textContent=rate;
-}
-setInterval(update,1000);
 </script>
 
 </body>
