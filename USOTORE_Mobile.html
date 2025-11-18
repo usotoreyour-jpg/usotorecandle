@@ -19,7 +19,7 @@ body{
   overflow:hidden;height:100vh;display:flex;flex-direction:column;
 }
 
-/* ===== チャート ===== */
+/* ===== チャート領域 ===== */
 #chart{flex:1;width:100%;background:#000;}
 
 /* ===== タイトル ===== */
@@ -30,7 +30,7 @@ body{
   pointer-events:none;z-index:100;
 }
 
-/* ===== HUD（下部） ===== */
+/* ===== 下部操作パネル ===== */
 .hud{
   background:rgba(0,0,0,.65);padding:10px 12px;border-top:1px solid #374151;
   backdrop-filter:blur(6px);width:100%;font-size:14px;
@@ -86,12 +86,11 @@ body{
 
 <div class="pill" id="rateText">---</div>
 
-
-<!-- 🔥【最重要】ライブラリ -->
+<!-- ▼必須（これが入っていなかったため動作しませんでした） -->
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.0.0/dist/lightweight-charts.standalone.production.js"></script>
 
 <script>
-// ===== 確認ログ（消してもOK） =====
+// 確認ログ（削除しても可）
 console.log("LightweightCharts:", typeof window.LightweightCharts);
 
 // ===== チャート初期化 =====
@@ -101,7 +100,7 @@ const chart = LightweightCharts.createChart(document.getElementById('chart'), {
 });
 const candleSeries = chart.addCandlestickSeries();
 
-// ===== ダミー価格データ =====
+// ===== ダミーデータ生成 =====
 let rate=150.000;
 let prev=rate;
 let candles=[];
