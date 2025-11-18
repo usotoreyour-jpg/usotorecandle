@@ -3,9 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>USOTORE Mobile ― ローソク足版</title>
+<title>USOTORE Mobile ― ローソク足完全版</title>
 
-<!-- Webフォント（軽量＋日本語対応） -->
+<!-- スマホでも見やすいフォント -->
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
 
 <style>
@@ -23,7 +23,7 @@ body{
 /* ===== チャート ===== */
 #chart{flex:1;width:100%;background:#000;}
 
-/* ===== 画面上タイトル ===== */
+/* ===== タイトル ===== */
 #title{
   position:absolute;top:10px;left:50%;transform:translateX(-50%);
   font-size:22px;letter-spacing:4px;font-weight:700;
@@ -31,7 +31,7 @@ body{
   pointer-events:none;z-index:100;
 }
 
-/* ===== HUD（下部操作パネル） ===== */
+/* ===== HUD（下部） ===== */
 .hud{
   background:rgba(0,0,0,.65);padding:10px 12px;border-top:1px solid #374151;
   backdrop-filter:blur(6px);width:100%;font-size:14px;
@@ -45,7 +45,6 @@ body{
 .btnL{background:linear-gradient(90deg,#ef4444,#f43f5e)}
 .hl{display:flex;gap:8px;margin-top:10px}
 
-/* 現在レート表示（右上） */
 .pill{
   position:absolute;top:10px;right:12px;background:rgba(0,0,0,.6);
   border:1px solid #374151;padding:6px 10px;border-radius:10px;font-size:13px
@@ -89,25 +88,22 @@ body{
 <div class="pill" id="rateText">---</div>
 
 
-<!-- ❗❗❗ addCandlestickSeriesが動かない原因はここだけです -->
-<!-- v4.0.0 standalone版で固定。これを変更しないでください -->
-<script src="https://unpkg.com/lightweight-charts@4.0.0/dist/lightweight-charts.standalone.production.js"></script>
-
+<!-- 🔥 addCandlestickSeriesを動かすために必要な唯一のスクリプト -->
+<!-- unpkg はブロックされやすいため、jsDelivr を採用 -->
+<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.0.0/dist/lightweight-charts.standalone.production.js"></script>
 
 <script>
-/* =========================================================
-    チャート初期化
-========================================================= */
+// ライブラリ読込チェック（初心者にも安心）
+console.log("LightweightCharts=", window.LightweightCharts);
+
+// ===== チャート初期化 =====
 const chart = LightweightCharts.createChart(document.getElementById('chart'), {
   layout:{background:{color:'#000'},textColor:'#fff'},
   grid:{vertLines:{visible:false},horzLines:{visible:false}}
 });
-const candleSeries = chart.addCandlestickSeries(); // ← ここが今回の問題点だった場所（完全復旧済み）
+const candleSeries = chart.addCandlestickSeries(); // ← 今回のエラーの原因はここだった
 
-
-/* =========================================================
-    初期データ生成
-========================================================= */
+// ===== ローソク足データ生成 =====
 let rate=150.000;
 let candles=[];
 
@@ -128,13 +124,9 @@ for(let i=0;i<200;i++){
   prev=c.close;
   candles.push(c);
 }
-
 candleSeries.setData(candles);
 
-
-/* =========================================================
-    自動更新ループ
-========================================================= */
+// ===== 自動更新 =====
 function tick(){
   const c=newCandle(rate);
   candleSeries.update(c);
@@ -143,12 +135,8 @@ function tick(){
 }
 setInterval(tick,1000);
 
-
-/* =========================================================
-    UI ロジック（必要なら拡張できます）
-========================================================= */
+// ===== UI入力処理（今後拡張用） =====
 let balance=1000000, payout=1.8, stake=1000;
-
 document.getElementById('stake').onchange=e=>stake=+e.target.value||1000;
 document.getElementById('payout').onchange=e=>payout=+e.target.value||1.8;
 </script>
