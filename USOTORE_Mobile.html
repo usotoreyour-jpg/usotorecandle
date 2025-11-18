@@ -3,9 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>USOTORE Mobile ― ローソク足完全版</title>
+<title>USOTORE Mobile</title>
 
-<!-- スマホでも見やすいフォント -->
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&display=swap" rel="stylesheet">
 
 <style>
@@ -88,25 +87,24 @@ body{
 <div class="pill" id="rateText">---</div>
 
 
-<!-- 🔥 addCandlestickSeriesを動かすために必要な唯一のスクリプト -->
-<!-- unpkg はブロックされやすいため、jsDelivr を採用 -->
+<!-- 🔥【最重要】ライブラリ -->
 <script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.0.0/dist/lightweight-charts.standalone.production.js"></script>
 
 <script>
-// ライブラリ読込チェック（初心者にも安心）
-console.log("LightweightCharts=", window.LightweightCharts);
+// ===== 確認ログ（消してもOK） =====
+console.log("LightweightCharts:", typeof window.LightweightCharts);
 
 // ===== チャート初期化 =====
 const chart = LightweightCharts.createChart(document.getElementById('chart'), {
   layout:{background:{color:'#000'},textColor:'#fff'},
   grid:{vertLines:{visible:false},horzLines:{visible:false}}
 });
-const candleSeries = chart.addCandlestickSeries(); // ← 今回のエラーの原因はここだった
+const candleSeries = chart.addCandlestickSeries();
 
-// ===== ローソク足データ生成 =====
+// ===== ダミー価格データ =====
 let rate=150.000;
+let prev=rate;
 let candles=[];
-
 function newCandle(prev){
   rate = +(prev*(1+(Math.random()-0.5)*0.004)).toFixed(3);
   return {
@@ -118,7 +116,6 @@ function newCandle(prev){
   };
 }
 
-let prev=rate;
 for(let i=0;i<200;i++){
   const c=newCandle(prev);
   prev=c.close;
@@ -135,7 +132,7 @@ function tick(){
 }
 setInterval(tick,1000);
 
-// ===== UI入力処理（今後拡張用） =====
+// ===== 入力処理（今後拡張用） =====
 let balance=1000000, payout=1.8, stake=1000;
 document.getElementById('stake').onchange=e=>stake=+e.target.value||1000;
 document.getElementById('payout').onchange=e=>payout=+e.target.value||1.8;
